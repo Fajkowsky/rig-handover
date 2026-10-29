@@ -1,0 +1,43 @@
+# Plan morning-digest § 3 and § 4 (ADR 0003): render /digest/2026-10-28 in CI and publish it to
+# GitHub Pages. The HTML never enters git. The banner's marker comes from the LANE_MARKER secret:
+# delete the secret and run this again to take the marker off the same link.
+name: preview
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - run: corepack enable && corepack prepare pnpm@12.16.1 --activate && pnpm install --frozen-lockfile
+      - name: Save /digest/2026-10-28 as one HTML file
+        env:
+          LANE_MARKER: ${{ secrets.LANE_MARKER }}
+        run: |
+          pnpm start &
+          for i in $(seq 1 30); do curl -sf localhost:8787/health > /dev/null && break; sleep 1; done
+          mkdir -p dist
+          curl -sf localhost:8787/digest/2026-10-28 -o dist/index.html
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+      - id: deployment
+        uses: actions/deploy-pages@v5
