@@ -95,4 +95,11 @@ describe('readNight', () => {
     expect(night?.rows.map((r) => [r.job, r.owner, r.runs])).toEqual([['a', null, 1]]);
     expect(night?.badLines).toBe(1);
   });
+
+  it('reads a line without an owner as owner null, not as a bad line', () => {
+    const log = '{"at":"2026-01-01T01:00:00+01:00","job":"a","status":"ok"}\n';
+    const night = readNight(tempRuns({ '2026-01-01.jsonl': log }), '2026-01-01');
+    expect(night?.rows.map((r) => [r.job, r.owner])).toEqual([['a', null]]);
+    expect(night?.badLines).toBe(0);
+  });
 });

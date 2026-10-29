@@ -18,9 +18,9 @@ function parseLine(text: string): RunLine | null {
   if (typeof value !== 'object' || value === null || Array.isArray(value)) return null;
   const { at, job, status, owner, error } = value as Record<string, unknown>;
   if (!isNonEmptyString(at) || !isNonEmptyString(job) || !isStatus(status)) return null;
-  if (owner !== null && typeof owner !== 'string') return null;
+  if (owner !== undefined && owner !== null && typeof owner !== 'string') return null;
   if (error !== undefined && typeof error !== 'string') return null;
-  return { at, job, status, owner, error: error ?? null };
+  return { at, job, status, owner: owner ?? null, error: error ?? null };
 }
 
 function toRow(job: string, lines: RunLine[]): DigestRow {
